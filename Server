@@ -5,18 +5,19 @@
 #include <ESPAsyncWebServer.h>
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
-#include <math.h>
 
+// Replace with your network credentials
+//const char* ssid = "TP-LINK_55B2";
+//const char* password = "36899029";
+const char* ssid = "Niidea";
+const char* password = "1234567788";
 
-const char* ssid = "TP-LINK_55B2";
-const char* password = "36899029";
-const int Rc = 10000;
-const int Vcc = 3;
-const int SensorPIN = A0;
 #define DHTPIN 4     // Digital pin connected to the DHT sensor
 
-#define DHTTYPE    DHT11     // DHT 11
-
+// Uncomment the type of sensor in use:
+//#define DHTTYPE    DHT11     // DHT 11
+#define DHTTYPE    DHT11     // DHT 22 (AM2302)
+//#define DHTTYPE    DHT21     // DHT 21 (AM2301)
 
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -28,7 +29,12 @@ float B = 2.372075385e-4;
 float C = 6.954079529e-8;
 float celsius;
 
-float K = 2.5; //factor de disipacion en mW/C
+const int Rc = 10000;
+const int Vcc = 3;
+const int SensorPIN = A0;
+float K=2.5;
+
+
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 
@@ -37,7 +43,7 @@ AsyncWebServer server(80);
 unsigned long previousMillis = 0;    // will store last time DHT was updated
 
 // Updates DHT readings every 10 seconds
-const long interval = 10000;
+const long interval = 10000;  
 
 const char index_html[] PROGMEM = R"rawliteral(
 <!DOCTYPE HTML><html>
@@ -63,8 +69,6 @@ const char index_html[] PROGMEM = R"rawliteral(
 </head>
 <body>
   <h2>Weather Station</h2>
-  
-  
   <p>
     <i class="fas fa-thermometer-half" style="color:#059e8a;"></i> 
     <span class="dht-labels">Temperature</span> 
@@ -104,40 +108,22 @@ setInterval(function ( ) {
 </html>)rawliteral";
 
 // Replaces placeholder with DHT values
-String processor(const String& var) {
+String processor(const String& var){
   //Serial.println(var);
-  if (var == "TEMPERATURE") {
-    return String(celsius);
-  //  return String(t);
+  if(var == "TEMPERATURE"){
+    return String(t);
   }
-  else if (var == "HUMIDITY") {
+  else if(var == "HUMIDITY"){
     return String(h);
   }
-
-
-}
-float thermistor() { //gets a value of temprature from the thermistor
-  float raw = analogRead(SensorPIN);
-  float V =  raw / 1024 * Vcc;
-
-  float R = (Rc * V ) / (Vcc - V);
-
-
-  float logR  = log(R);
-  float R_th = 1.0 / (A + B * logR + C * logR * logR * logR );
-
-  float kelvin = R_th - V * V / (K * R) * 1000;
-  celsius = kelvin - 273.15;
-  return celsius;
-  delay(2500);
-
+  return String();
 }
 
-void setup() {
+void setup(){
   // Serial port for debugging purposes
   Serial.begin(115200);
   dht.begin();
-
+  
   // Connect to Wi-Fi
   WiFi.begin(ssid, password);
   Serial.println("Connecting to WiFi");
@@ -150,13 +136,13 @@ void setup() {
   Serial.println(WiFi.localIP());
 
   // Route for root / web page
-  server.on("/", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/html", index_html, processor);
   });
-  server.on("/temperature", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/temperature", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", String(t).c_str());
   });
-  server.on("/humidity", HTTP_GET, [](AsyncWebServerRequest * request) {
+  server.on("/humidity", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send_P(200, "text/plain", String(h).c_str());
   });
 
@@ -164,13 +150,27 @@ void setup() {
   server.begin();
 }
 
-void loop() {
+ 
+void loop(){  
   unsigned long currentMillis = millis();
+//  thermistor();
   if (currentMillis - previousMillis >= interval) {
     // save the last time you updated the DHT values
     previousMillis = currentMillis;
     // Read temperature as Celsius (the default)
-    float newT = dht.readTemperature();
+//    float newT = dht.readTemperature();
+      float raw = analogRead(SensorPIN);
+  float V =  raw / 1024 * Vcc;
+
+  float R = (Rc * V ) / (Vcc - V);
+
+
+  float logR  = log(R);
+  float R_th = 1.0 / (A + B * logR + C * logR * logR * logR );
+
+  float kelvin = R_th - V * V / (K * R) * 1000;
+  celsius = kelvin - 273.15;
+    float newT=celsius;
     // Read temperature as Fahrenheit (isFahrenheit = true)
     //float newT = dht.readTemperature(true);
     // if temperature read failed, don't change t value
@@ -183,7 +183,7 @@ void loop() {
     }
     // Read Humidity
     float newH = dht.readHumidity();
-    // if humidity read failed, don't change h value
+    // if humidity read failed, don't change h value 
     if (isnan(newH)) {
       Serial.println("Failed to read from DHT sensor!");
     }

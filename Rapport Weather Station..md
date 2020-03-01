@@ -10,8 +10,7 @@
 
 ### Technological choice explanation
 
- For this project we have chosen Wi-Fi technolgy insted of Sigfox because we tought that it requires less parts so it would be cheaper and it would also be less likely to fail simply because there are less components. Sigfox is a wireless network for internet-connected objects it would also be a good solution but as few parts are used the better.
-
+ First of all, we had to decide which technology we were going to use in the project. We chose Wi-Fi, as we can see in the table WiFi has more Data Rate which is a good point if we want to transmit information. Power usage is also better than SigFox and obviusly WiFi has a lower cost than Sigfox since you need less cables and you don’t need an antena. The only disadvantage is that with Wifi you have a shorter range to send data (100 m), however with SigFox you can send data in a range of several miles.
 
 ### Schematic solution
 ![N|Solid](https://raw.githubusercontent.com/Essim28/Internet-des-Objects/master/conexions.PNG)
